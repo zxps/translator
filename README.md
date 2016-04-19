@@ -10,6 +10,11 @@ Simple language translator!
  - Get free yandex api key. 
  - Then put your yandex api key instead YOUR_YANDEX_API_KEY in config.properties file
 
+If you whant to run from anywhere:
+
+    $ ln -s /your/current/path/translate.sh /usr/local/bin/translate
+ 
+
 **Run**
 
     $ ./translate.sh robust
