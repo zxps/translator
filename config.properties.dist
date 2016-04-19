@@ -1,0 +1,4 @@
+trans.translator=yandex
+trans.lang.source=en
+trans.lang.result=ru
+trans.yandex.key=YOUR_YANDEX_API_KEY
