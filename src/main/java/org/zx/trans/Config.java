@@ -13,21 +13,21 @@ public class Config
 
     String transPrefix = null;
 
-    public Config()
+    public Config(String configPath)
     {
         props = new Properties();
-        load();
+        load(configPath);
     }
 
-    private void load()
+    private void load(String configPath)
     {
         props = new Properties();
         FileInputStream fis = null;
         try {
-            fis = new FileInputStream("./config.properties");
+            fis = new FileInputStream(configPath + "config.properties");
             props.load(fis);
         } catch (IOException e) {
-            System.out.println("config.properties not found");
+            System.out.println("config.properties not found at " + configPath);
             System.exit(-1);
         }
     }
