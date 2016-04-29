@@ -1,63 +1,76 @@
 package org.zx.trans;
 
+import com.detectlanguage.DetectLanguage;
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import org.zx.trans.language.Detector;
+import org.zx.trans.language.DetectorException;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+
 public class App
 {
-    public static void main( String[] args )
-    {
-        Config config = new Config(getConfigPath(args));
-        if (args.length < 1) {
-            help(config);
-            System.exit(-1);
-        }
-        String word = getArg(args, 0, "");
-        if (word.trim().length() < 1) {
-            System.out.println("Empty source");
-            help(config);
-            System.exit(-1);
-        }
-        String sourceLang = getArg(args, 1, "en");
-        String resultLang = getArg(args, 2, "ru");
-        Translatable translator = config.getTranslator();
-        Context context = new Context(translator);
-        System.out.println(context.translate(word, sourceLang, resultLang));
-    }
 
-    private static String getArg(String [] args, int index, String defaultValue)
+    public static void main(String[] args) throws IOException
     {
-        String result = defaultValue;
-        if (args.length <= 1) {
-            return result;
+        OptionParser optionParser = new OptionParser(){
+            {
+                nonOptions().requiresArgument();
+                acceptsAll(Arrays.asList("c", "config"), "Config path").
+                        withOptionalArg().
+                        defaultsTo("./");
+                acceptsAll(Arrays.asList("h", "help"), "Show help").forHelp();
+            }
+        };
+        OptionSet options = optionParser.parse(args);
+        if (options.has("help") || options.has("h")) {
+            help();
+            optionParser.printHelpOn(System.out);
+            return;
         }
-        if (args.length >=index + 1) {
-            result = args[index];
+        List arguments = options.nonOptionArguments();
+        String resultLang = null;
+        String sourceLang = null;
+        String text = null;
+        if (arguments.size() < 1) {
+            System.out.println("Nothing to translate");
+            return;
         }
-        if (result.startsWith("--")) {
-            result = defaultValue;
+        Config config = new Config((String) options.valueOf("config"));
+        if (config.getProp("trans.detector.key") != null) {
+            DetectLanguage.apiKey = config.getProp("trans.detector.key");
         }
-        return result;
-    }
-
-    private static String getConfigPath(String [] args)
-    {
-        String path = "./";
-        for(int i = 0 ; i < args.length; i++) {
-            if (i > 0 && args[i].startsWith("--config=")) {
-                path = args[i].split("=")[1];
-                break;
+        text = (String) arguments.get(0);
+        if (arguments.size() > 1) {
+            resultLang = (String) arguments.get(1);
+        }
+        if (arguments.size() > 2) {
+            sourceLang = (String) arguments.get(2);
+        }
+        if (sourceLang == null) {
+            try{
+                sourceLang = new Detector(text).detect().getCode();
+            } catch (DetectorException e) {
+                System.out.println(e.getMessage());
+                System.exit(-1);
             }
         }
-        return path;
+        Translatable translator = config.getTranslator();
+        Context context = new Context(translator);
+        System.out.println(context.translate(text, sourceLang, resultLang));
     }
 
-    private static void help(Config config)
+    private static void help()
     {
         StringBuffer help = new StringBuffer();
-        help.append("Translator cli\n");
-        help.append("  Usage:\n");
-        help.append("    /path/to/command word [source_lang] [result_lang] [--config=/config/location/]\n");
-        help.append("  Default source language: " + config.getProp("trans.lang.source") + "\n");
-        help.append("  Default result language: " + config.getProp("trans.lang.result") + "\n");
-        help.append("  Default config location: ./\n");
+        help.append("Translator cli\n\n");
+        help.append("Usage: /path/to/translator word LANG [SOURCE] [--option1[--option2[...]]]\n");
+        help.append(" LANG    - result language.\n");
+        help.append(" SOURCE  - source language. If not specified, \n");
+        help.append("           application will try to detect source language automatically, through\n");
+        help.append("           language detector api.\n");
 
         System.out.println(help);
     }

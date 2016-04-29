@@ -1,4 +1,6 @@
 trans.translator=yandex
 trans.lang.source=en
 trans.lang.result=ru
+trans.detector.key=YOUR_detectlanguage.com_API_KEY
 trans.yandex.key=YOUR_YANDEX_API_KEY
+trans.systran.key=YOUR_SYSTRAN_SERVER_API_KEY
